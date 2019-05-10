@@ -66,7 +66,7 @@ class Pix2PixModel(BaseModel):
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             if opt.loss_norm == "L1":
                 self.criterionL1L2 = torch.nn.L1Loss()
-            elif opt.lambda_L2 == "L2":
+            elif opt.loss_norm == "L2":
                 self.criterionL1L2 = torch.nn.MSELoss()
             else:
                 raise NotImplementedError("specify either an L1 or L2 as the loss_norm")
