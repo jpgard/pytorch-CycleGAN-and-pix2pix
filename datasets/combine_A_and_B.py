@@ -37,12 +37,15 @@ for sp in splits:
         else:
             name_B = name_A
         path_B = os.path.join(img_fold_B, name_B)
-        if os.path.isfile(path_A) and os.path.isfile(path_B):
+        if os.path.isfile(path_A) and os.path.isfile(path_B) and (".DS_Store" not in path_A):
             name_AB = name_A
             if args.use_AB:
                 name_AB = name_AB.replace('_A.', '.')  # remove _A
             path_AB = os.path.join(img_fold_AB, name_AB)
             im_A = cv2.imread(path_A, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
             im_B = cv2.imread(path_B, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
-            im_AB = np.concatenate([im_A, im_B], 1)
-            cv2.imwrite(path_AB, im_AB)
+            try:
+                im_AB = np.concatenate([im_A, im_B], 1)
+                cv2.imwrite(path_AB, im_AB)
+            except:
+                import ipdb;ipdb.set_trace()
