@@ -36,7 +36,7 @@ def make_volume_dataset(dir, max_dataset_size=float("inf")):
         dataset_id = res.group(1)
         z = res.group(2)
         dataset_images[dataset_id].append(impath)
-        assert len(dataset_images[dataset_id]) == z + 1, "missing z-slice in input data"
+        assert len(dataset_images[dataset_id]) == int(z) + 1, "missing z-slice in input data"
     if len(dataset_images) > max_dataset_size:
         raise NotImplementedError
     # return just a list of the z-slice filepaths for each dataset
@@ -126,7 +126,7 @@ class AlignedVolumeDataset(BaseDataset):
             B = AB.crop((w2, 0, w, h))
             A_slices.append(A)
             B_slices.append(B)
-        # todo: check that this is correct concatenation axis for pytorch; should be channels-first?
+        # todo: check that this is correct concatenation axis for pytorch; should be channels-first (?)
         A = np.concatenate(A_slices, axis=0)
         B = np.concatenate(B_slices, axis=0)
         # apply the same transform to both A and B
