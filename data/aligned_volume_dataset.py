@@ -19,24 +19,23 @@ def make_volume_dataset(dir, max_dataset_size=float("inf")):
     Adapted from data.image_folder.make_dataset().
     """
     images = []
+    regex = re.compile("(\d+)_(\d+)\..*")
     dataset_images = defaultdict(list)
     assert os.path.isdir(dir), '%s is not a valid directory' % dir
-
     for root, _, fnames in sorted(os.walk(dir)):
         for fname in fnames:
-            # todo: combine fnames with common dataset_id prefix; this should return a NESTED list where each element is a list of the files for a given dataset.
             if is_image_file(fname):
                 path = os.path.join(root, fname)
                 images.append(path)
-    # sorting the filenames will yield a list sorted first by dataset_id, then by z-slice
-    images = sorted(images)
+    # sorting first by dataset_id, then by z-slice
+    images = sorted(images, key=lambda x: (int(re.match(regex, os.path.basename(x)).group(1)),
+                                           int(re.match(regex, os.path.basename(x)).group(2))))
     for impath in images:
         bp = os.path.basename(impath)
-        res = re.match("(\d+)_(\d+)\..*", bp)
+        res = re.match(regex, bp)
         dataset_id = res.group(1)
         z = res.group(2)
         dataset_images[dataset_id].append(impath)
-        assert len(dataset_images[dataset_id]) == int(z) + 1, "missing z-slice in input data"
     if len(dataset_images) > max_dataset_size:
         raise NotImplementedError
     # return just a list of the z-slice filepaths for each dataset
@@ -45,12 +44,13 @@ def make_volume_dataset(dir, max_dataset_size=float("inf")):
 
 def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, convert=True):
     """
-    Get the 3d versions of transforms; modified from base_dataset.get_transform().
+    Get the 3d versions of transforms. Modified from base_dataset.get_transform().
     """
     transform_list = []
     if grayscale:
         transform_list.append(transforms.Grayscale(1))
     if 'resize' in opt.preprocess:
+        # todo: need a 3D resize function
         osize = [opt.load_size, opt.load_size]
         transform_list.append(transforms.Resize(osize, method))
     elif 'scale_width' in opt.preprocess:
@@ -77,8 +77,9 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         #     transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
 
     if convert:
+        # todo: this may not work; need to convert the list of PIL images or arrays to a 3D tensor of shape (channels, h, w)
         transform_list += [spatial_transforms.ToTensor()]
-        # transform_list += [transforms.ToTensor()]
+        transform_list += [transforms.ToTensor()]
         if grayscale:
             transform_list += [spatial_transforms.Normalize((0.5,), (0.5,))]
             # transform_list += [transforms.Normalize((0.5,), (0.5,))]
